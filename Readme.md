@@ -1,3 +1,4 @@
+```
 EternalPath/
 │
 ├── Game/ <-- Inti game: aturan, entitas, dan logika
@@ -19,3 +20,4 @@ EternalPath/
 │
 ├── Program.cs <-- Entry point
 └── GameLoop.cs <-- (Opsional) Loop utama untuk update/render
+```
