@@ -8,11 +8,19 @@ namespace EternalPath.InputHandlers
   {
     public static Point PlayerLocation { get; set; }
     public static Size PlayerSize { get; set; }
-    public static Eternal Form { get; set; } // Ganti ke class Eternal, bukan Form umum
+    public static Eternal Form { get; set; }
+    public static Player player { get; set; }
 
     private static int MoveSpeed = 50;
     private static bool isMoving = false;
     public static bool FacingLeft { get; private set; } = false;
+
+    // Lompat manual
+    private static float verticalVelocity = 0;
+    private static bool isJumping = false;
+    private const float Gravity = 5f;
+    private const float JumpStrength = -30f;
+    private const float MaxFallSpeed = 20f;
 
     public static void HandleKeyDown(KeyEventArgs e)
     {
@@ -25,6 +33,7 @@ namespace EternalPath.InputHandlers
         case Keys.Escape:
           Application.Exit();
           break;
+
         case Keys.A:
           FacingLeft = true;
           PlayerLocation = new Point(
@@ -40,12 +49,15 @@ namespace EternalPath.InputHandlers
               PlayerLocation.Y);
           moved = true;
           break;
+
         case Keys.Space:
-          PlayerLocation = new Point(
-              PlayerLocation.X,
-              Math.Max(0, PlayerLocation.Y - MoveSpeed));
-          moved = true;
+          if (!isJumping)
+          {
+            verticalVelocity = JumpStrength;
+            isJumping = true;
+          }
           break;
+
         case Keys.S:
           PlayerLocation = new Point(
               PlayerLocation.X,
@@ -59,6 +71,8 @@ namespace EternalPath.InputHandlers
         isMoving = true;
         Form.SetPlayerImage(Path.Characters.Get("Run/Run.gif"));
       }
+
+      SyncPlayerPosition();
     }
 
     public static void HandleKeyUp(KeyEventArgs e)
@@ -70,7 +84,41 @@ namespace EternalPath.InputHandlers
 
     public static void HandleKeyPress(KeyPressEventArgs e)
     {
-      // Optional: logika tambahan jika ingin
+      // Optional, if you want keypress behavior
+    }
+
+    public static void UpdatePhysics()
+    {
+      if (isJumping)
+      {
+        verticalVelocity += Gravity;
+        if (verticalVelocity > MaxFallSpeed)
+          verticalVelocity = MaxFallSpeed;
+
+        int newY = PlayerLocation.Y + (int)verticalVelocity;
+        int groundLevel = Form.ClientSize.Height - PlayerSize.Height;
+
+        if (newY >= groundLevel)
+        {
+          PlayerLocation = new Point(PlayerLocation.X, groundLevel);
+          verticalVelocity = 0;
+          isJumping = false;
+        }
+        else
+        {
+          PlayerLocation = new Point(PlayerLocation.X, newY);
+        }
+
+        SyncPlayerPosition();
+      }
+    }
+
+    private static void SyncPlayerPosition()
+    {
+      if (player != null)
+      {
+        player.SetPosition(PlayerLocation);
+      }
     }
   }
 }
