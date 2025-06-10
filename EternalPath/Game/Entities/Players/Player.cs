@@ -1,159 +1,139 @@
 using System;
 using System.Drawing;
+using System.Windows.Forms;
+using Timer = System.Windows.Forms.Timer;
 
 namespace EternalPath
 {
-  public class Player
+  public class Player : IDisposable
   {
-    public PointF Position { get; set; }
-    public PointF Velocity { get; set; }
-    public SizeF Size { get; set; }
-    public bool IsOnGround { get; set; }
-    public bool IsFacingRight { get; set; }
-    public int Health { get; set; }
-    public int MaxHealth { get; set; }
+    private Image currentImage;
+    private Point location;
+    private Size size;
+    private bool facingLeft;
+    private Timer animationTimer;
+    private bool disposed = false;
 
-    // Animation properties
-    public int CurrentFrame { get; set; }
-    public int AnimationTimer { get; set; }
-    public PlayerState State { get; set; }
-
-    // Constants
-    public const float MaxSpeed = 5f;
-    public const float JumpPower = -12f;
-    public const float Friction = 0.8f;
-
-    public Player(float x, float y, float width = 32, float height = 32)
+    public Point Location
     {
-      Position = new PointF(x, y);
-      Velocity = new PointF(0, 0);
-      Size = new SizeF(width, height);
-      IsOnGround = false;
-      IsFacingRight = true;
-      Health = 100;
-      MaxHealth = 100;
-      State = PlayerState.Idle;
-      CurrentFrame = 0;
-      AnimationTimer = 0;
+      get => location;
+      set => location = value;
     }
 
-    public void Update(float deltaTime)
+    public Size Size
     {
-      // Update animation
-      AnimationTimer++;
-      if (AnimationTimer >= 10) // Change frame every 10 ticks
-      {
-        CurrentFrame = (CurrentFrame + 1) % 4;
-        AnimationTimer = 0;
-      }
+      get => size;
+      set => size = value;
+    }
 
-      // Update state based on movement
-      if (Math.Abs(Velocity.X) > 0.1f && IsOnGround)
-        State = PlayerState.Running;
-      else if (!IsOnGround && Velocity.Y < 0)
-        State = PlayerState.Jumping;
-      else if (!IsOnGround && Velocity.Y > 0)
-        State = PlayerState.Falling;
-      else
-        State = PlayerState.Idle;
+    public bool FacingLeft
+    {
+      get => facingLeft;
+      set => facingLeft = value;
+    }
 
-      // Apply friction when on ground
-      if (IsOnGround)
+    public Rectangle Bounds => new Rectangle(location, size);
+
+    public Player(Point initialLocation, Size playerSize)
+    {
+      location = initialLocation;
+      size = playerSize;
+      facingLeft = false;
+
+      animationTimer = new Timer();
+      animationTimer.Interval = 50;
+      animationTimer.Tick += AnimationTimer_Tick;
+      animationTimer.Start();
+    }
+
+    public void SetImage(string imagePath)
+    {
+      currentImage?.Dispose();
+
+      currentImage = Image.FromFile(imagePath);
+
+      if (ImageAnimator.CanAnimate(currentImage))
       {
-        Velocity = new PointF(Velocity.X * Friction, Velocity.Y);
+        ImageAnimator.Animate(currentImage, OnFrameChanged);
       }
     }
 
-    public void MoveLeft()
+    public void Update()
     {
-      Velocity = new PointF(Math.Max(Velocity.X - 1f, -MaxSpeed), Velocity.Y);
-      IsFacingRight = false;
     }
 
-    public void MoveRight()
+    public void Draw(Graphics graphics)
     {
-      Velocity = new PointF(Math.Min(Velocity.X + 1f, MaxSpeed), Velocity.Y);
-      IsFacingRight = true;
-    }
+      if (currentImage == null) return;
 
-    public void Jump()
-    {
-      if (IsOnGround)
+      graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+      graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+      Rectangle destination = new Rectangle(location, size);
+
+      if (facingLeft)
       {
-        Velocity = new PointF(Velocity.X, JumpPower);
-        IsOnGround = false;
+        destination = new Rectangle(location.X + size.Width, location.Y, -size.Width, size.Height);
+      }
+
+      graphics.DrawImage(currentImage, destination);
+    }
+
+    public void Move(int deltaX, int deltaY)
+    {
+      location = new Point(location.X + deltaX, location.Y + deltaY);
+    }
+
+    public void SetPosition(int x, int y)
+    {
+      location = new Point(x, y);
+    }
+
+    public void SetPosition(Point newLocation)
+    {
+      location = newLocation;
+    }
+
+    public Rectangle GetInvalidateRectangle()
+    {
+      return new Rectangle(location, size);
+    }
+
+    private void AnimationTimer_Tick(object sender, EventArgs e)
+    {
+      if (currentImage != null && ImageAnimator.CanAnimate(currentImage))
+      {
+        ImageAnimator.UpdateFrames(currentImage);
       }
     }
 
-    public RectangleF GetBounds()
+    private void OnFrameChanged(object sender, EventArgs e)
     {
-      return new RectangleF(Position.X, Position.Y, Size.Width, Size.Height);
     }
 
-    public void TakeDamage(int damage)
+    public void Dispose()
     {
-      Health = Math.Max(0, Health - damage);
+      Dispose(true);
+      GC.SuppressFinalize(this);
     }
 
-    public void Heal(int amount)
+    protected virtual void Dispose(bool disposing)
     {
-      Health = Math.Min(MaxHealth, Health + amount);
-    }
-
-    public bool IsDead()
-    {
-      return Health <= 0;
-    }
-
-    public void Draw(Graphics g)
-    {
-      // Simple colored rectangle for now
-      Color playerColor = Color.Blue;
-      if (!IsOnGround) playerColor = Color.LightBlue;
-
-      using (Brush brush = new SolidBrush(playerColor))
+      if (!disposed)
       {
-        g.FillRectangle(brush, Position.X, Position.Y, Size.Width, Size.Height);
+        if (disposing)
+        {
+          currentImage?.Dispose();
+          animationTimer?.Stop();
+          animationTimer?.Dispose();
+        }
+        disposed = true;
       }
-
-      // Draw direction indicator
-      using (Brush eyeBrush = new SolidBrush(Color.White))
-      {
-        float eyeSize = 4;
-        float eyeX = IsFacingRight ? Position.X + Size.Width - 8 : Position.X + 4;
-        g.FillEllipse(eyeBrush, eyeX, Position.Y + 6, eyeSize, eyeSize);
-      }
-
-      // Draw health bar
-      DrawHealthBar(g);
     }
 
-    private void DrawHealthBar(Graphics g)
+    ~Player()
     {
-      float barWidth = Size.Width;
-      float barHeight = 4;
-      float barX = Position.X;
-      float barY = Position.Y - 8;
-
-      // Background
-      g.FillRectangle(Brushes.Red, barX, barY, barWidth, barHeight);
-
-      // Health
-      float healthPercent = (float)Health / MaxHealth;
-      g.FillRectangle(Brushes.Green, barX, barY, barWidth * healthPercent, barHeight);
-
-      // Border
-      g.DrawRectangle(Pens.Black, barX, barY, barWidth, barHeight);
+      Dispose(false);
     }
-  }
-
-  public enum PlayerState
-  {
-    Idle,
-    Running,
-    Jumping,
-    Falling,
-    Attacking,
-    Hurt
   }
 }

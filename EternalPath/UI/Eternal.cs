@@ -3,25 +3,24 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 using Timer = System.Windows.Forms.Timer;
+
 namespace EternalPath
 {
     public partial class Eternal : Form
     {
         private System.ComponentModel.IContainer components = null;
-        private Image playerImage;
-        private Point playerLocation;
-        private Size playerSize;
+        private Player player;
         private Timer gameTimer;
+
+        public Point PlayerLocation => player?.Location ?? Point.Empty;
+        public Size PlayerSize => player?.Size ?? Size.Empty;
 
         protected override void Dispose(bool disposing)
         {
             if (disposing)
             {
-                if (components != null)
-                {
-                    components.Dispose();
-                }
-                playerImage?.Dispose();
+                components?.Dispose();
+                player?.Dispose();
                 gameTimer?.Dispose();
             }
             base.Dispose(disposing);
@@ -30,57 +29,67 @@ namespace EternalPath
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(EternalPath.Config.WindowWidth, EternalPath.Config.WindowHeight);
+            this.AutoScaleMode = AutoScaleMode.Font;
+            this.ClientSize = new Size(Config.WindowWidth, Config.WindowHeight);
             this.Text = "Eternal Path";
-            string imagePath = EternalPath.Path.Map.Get("background.png");
+
+            string imagePath = Path.Map.Get("background.png");
             this.BackgroundImage = Image.FromFile(imagePath);
             this.BackgroundImageLayout = ImageLayout.Stretch;
 
-            // Initialize player properties
-            playerSize = new Size(256, 256);
-            playerLocation = new Point(0, 700);
-            string playerPath = EternalPath.Path.Sprite.Get("Characters/Idle/Idle.gif");
-            playerImage = Image.FromFile(playerPath);
+            Size playerSize = new Size(256, 256);
+            Point playerLocation = new Point(0, 800);
+            player = new Player(playerLocation, playerSize);
 
-            // Initialize game timer
+            string playerPath = Path.Characters.Get("Idle/Idle.gif");
+            player.SetImage(playerPath);
+
             gameTimer = new Timer();
-            gameTimer.Interval = 1000 / 120; // ~120 FPS
+            gameTimer.Interval = 30;
             gameTimer.Tick += GameTimer_Tick;
             gameTimer.Start();
 
-            this.KeyDown += new KeyEventHandler(Eternal_KeyDown);
-            this.KeyPress += new KeyPressEventHandler(Eternal_KeyPress);
-            this.KeyUp += new KeyEventHandler(Eternal_KeyUp);
+            this.KeyDown += Eternal_KeyDown;
+            this.KeyPress += Eternal_KeyPress;
+            this.KeyUp += Eternal_KeyUp;
 
             this.KeyPreview = true;
-            this.DoubleBuffered = true; // Enable double buffering to reduce flicker
+            this.DoubleBuffered = true;
         }
 
         public Eternal()
         {
             InitializeComponent();
-            KeyHandler.PlayerLocation = playerLocation;
-            KeyHandler.PlayerSize = playerSize;
+
+            KeyHandler.PlayerLocation = player.Location;
+            KeyHandler.PlayerSize = player.Size;
             KeyHandler.Form = this;
+        }
+
+        public void SetPlayerImage(string imagePath)
+        {
+            player?.SetImage(imagePath);
+            Invalidate(player?.GetInvalidateRectangle() ?? Rectangle.Empty);
         }
 
         private void GameTimer_Tick(object sender, EventArgs e)
         {
-            // Update player position based on key states
-            playerLocation = KeyHandler.PlayerLocation; // Sync local playerLocation
-            Invalidate(); // Redraw the form
+            if (player != null)
+            {
+                player.Location = KeyHandler.PlayerLocation;
+                player.FacingLeft = KeyHandler.FacingLeft;
+
+                player.Update();
+
+                Invalidate();
+            }
         }
 
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
-            if (playerImage != null)
-            {
-                e.Graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-                e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-                e.Graphics.DrawImage(playerImage, new Rectangle(playerLocation, playerSize));
-            }
+
+            player?.Draw(e.Graphics);
         }
 
         private void Eternal_KeyDown(object sender, KeyEventArgs e)
