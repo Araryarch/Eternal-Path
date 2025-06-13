@@ -39,6 +39,8 @@ namespace EternalPath
     private const int DASH_DURATION = 10;
     private const int DASH_COOLDOWN = 60;
     private const int MAX_JUMPS = 2;
+    private const int HITBOX_HORIZONTAL_SHRINK = 50;
+    private const int HITBOX_VERTICAL_SHRINK = 50;
 
     public Player(float x, float y)
     {
@@ -249,7 +251,7 @@ namespace EternalPath
 
     public Rectangle GetBounds()
     {
-      return new Rectangle((int)X, (int)Y, Width, Height);
+      return new Rectangle((int)X + HITBOX_HORIZONTAL_SHRINK, (int)Y + HITBOX_VERTICAL_SHRINK * 2, Width - HITBOX_HORIZONTAL_SHRINK * 2, Height - HITBOX_VERTICAL_SHRINK * 2);
     }
 
     public Rectangle GetAttackBounds()
