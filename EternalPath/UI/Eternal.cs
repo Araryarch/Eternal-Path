@@ -17,8 +17,9 @@ namespace EternalPath
 
         private void InitializeComponent()
         {
-            this.Text = "Endless Platformer - Main Menu";
-            this.Size = new Size(800, 600);
+            this.Text = "Eternal Path - Main Menu";
+            this.Size = new Size(1200, 700);
+            this.Icon = new Icon(EternalPath.Path.Icon.Get("favicon.ico"));
             this.BackColor = Color.FromArgb(20, 30, 50);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
@@ -26,7 +27,7 @@ namespace EternalPath
 
             Label titleLabel = new Label
             {
-                Text = "ENDLESS PLATFORMER",
+                Text = "Eternal Path",
                 Font = new Font("Arial", 24, FontStyle.Bold),
                 ForeColor = Color.White,
                 AutoSize = true
@@ -113,9 +114,10 @@ namespace EternalPath
 
         private void InitializeComponent()
         {
-            this.Text = "Endless Platformer";
+            this.Text = "Eternal Path";
             this.Size = new Size(1200, 700);
             this.BackColor = Color.SkyBlue;
+            this.Icon = new Icon(EternalPath.Path.Icon.Get("favicon.ico"));
             this.DoubleBuffered = true;
             this.KeyPreview = true;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
