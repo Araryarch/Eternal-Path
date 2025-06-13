@@ -33,7 +33,7 @@ namespace EternalPath
 
     public Image GetCurrentFrame()
     {
-      return frames.Count > 0 ? frames[currentFrame] : null;
+      return frames.Count > 0 ? frames[currentFrame] : null!;
     }
 
     public void Reset()
