@@ -6,6 +6,7 @@ namespace EternalPath
     public int Y { get; set; }
     public int Width { get; set; }
     public int Height { get; set; }
+
     public const int PLATFORM_HEIGHT = 40;
 
     public Platform(int x, int y, int width, int height)
