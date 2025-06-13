@@ -6,8 +6,9 @@ namespace EternalPath
     public float Y { get; set; }
     public float VelocityX { get; set; }
     public float VelocityY { get; set; }
-    public int Width { get; } = 25;
-    public int Height { get; } = 35;
+    public float Scale { get; set; } = 3.5f;
+    public int Width => (int)(35 * Scale);
+    public int Height => (int)(35 * Scale);
     public bool OnGround { get; set; }
     public int Health { get; private set; }
     public int MaxHealth { get; } = 5;
@@ -18,6 +19,7 @@ namespace EternalPath
     public int DashCooldown { get; private set; }
     public float DashDirection { get; private set; }
     public bool FacingRight { get; private set; }
+
     private int _jumpCount;
     private int _invulnerabilityTimer;
     private int _attackTimer;
@@ -28,6 +30,7 @@ namespace EternalPath
     private Animation _attackAnimation;
     private Animation _dashAnimation;
     private Animation _currentAnimation;
+
     private const float GRAVITY = 0.5f;
     private const float JUMP_POWER = -12f;
     private const float MOVE_SPEED = 5f;
@@ -55,48 +58,49 @@ namespace EternalPath
       {
         _idleAnimation = new Animation(new List<Image>
         {
-            Image.FromFile(EternalPath.Path.Character.Get("adventurer-idle-00.png")),
-            Image.FromFile(EternalPath.Path.Character.Get("adventurer-idle-01.png")),
-            Image.FromFile(EternalPath.Path.Character.Get("adventurer-idle-02.png")),
-            Image.FromFile(EternalPath.Path.Character.Get("adventurer-idle-03.png"))
+          Image.FromFile(EternalPath.Path.Character.Get("adventurer-idle-00.png")),
+          Image.FromFile(EternalPath.Path.Character.Get("adventurer-idle-01.png")),
+          Image.FromFile(EternalPath.Path.Character.Get("adventurer-idle-02.png")),
+          Image.FromFile(EternalPath.Path.Character.Get("adventurer-idle-03.png"))
         }, 10);
 
         _runAnimation = new Animation(new List<Image>
         {
-            Image.FromFile(EternalPath.Path.Character.Get("adventurer-run-00.png")),
-            Image.FromFile(EternalPath.Path.Character.Get("adventurer-run-01.png")),
-            Image.FromFile(EternalPath.Path.Character.Get("adventurer-run-02.png")),
-            Image.FromFile(EternalPath.Path.Character.Get("adventurer-run-03.png")),
-            Image.FromFile(EternalPath.Path.Character.Get("adventurer-run-04.png")),
-            Image.FromFile(EternalPath.Path.Character.Get("adventurer-run-05.png"))
+          Image.FromFile(EternalPath.Path.Character.Get("adventurer-run-00.png")),
+          Image.FromFile(EternalPath.Path.Character.Get("adventurer-run-01.png")),
+          Image.FromFile(EternalPath.Path.Character.Get("adventurer-run-02.png")),
+          Image.FromFile(EternalPath.Path.Character.Get("adventurer-run-03.png")),
+          Image.FromFile(EternalPath.Path.Character.Get("adventurer-run-04.png")),
+          Image.FromFile(EternalPath.Path.Character.Get("adventurer-run-05.png"))
         }, 8);
 
         _jumpAnimation = new Animation(new List<Image>
         {
-            Image.FromFile(EternalPath.Path.Character.Get("adventurer-jump-00.png")),
-            Image.FromFile(EternalPath.Path.Character.Get("adventurer-jump-01.png")),
-            Image.FromFile(EternalPath.Path.Character.Get("adventurer-jump-02.png")),
-            Image.FromFile(EternalPath.Path.Character.Get("adventurer-jump-03.png"))
+          Image.FromFile(EternalPath.Path.Character.Get("adventurer-jump-00.png")),
+          Image.FromFile(EternalPath.Path.Character.Get("adventurer-jump-01.png")),
+          Image.FromFile(EternalPath.Path.Character.Get("adventurer-jump-02.png")),
+          Image.FromFile(EternalPath.Path.Character.Get("adventurer-jump-03.png"))
         }, 12, false);
 
         _attackAnimation = new Animation(new List<Image>
         {
-            Image.FromFile(EternalPath.Path.Character.Get("adventurer-attack3-00.png")),
-            Image.FromFile(EternalPath.Path.Character.Get("adventurer-attack3-01.png")),
-            Image.FromFile(EternalPath.Path.Character.Get("adventurer-attack3-02.png")),
-            Image.FromFile(EternalPath.Path.Character.Get("adventurer-attack3-03.png")),
-            Image.FromFile(EternalPath.Path.Character.Get("adventurer-attack3-04.png")),
-            Image.FromFile(EternalPath.Path.Character.Get("adventurer-attack3-05.png"))
+          Image.FromFile(EternalPath.Path.Character.Get("adventurer-attack3-00.png")),
+          Image.FromFile(EternalPath.Path.Character.Get("adventurer-attack3-01.png")),
+          Image.FromFile(EternalPath.Path.Character.Get("adventurer-attack3-02.png")),
+          Image.FromFile(EternalPath.Path.Character.Get("adventurer-attack3-03.png")),
+          Image.FromFile(EternalPath.Path.Character.Get("adventurer-attack3-04.png")),
+          Image.FromFile(EternalPath.Path.Character.Get("adventurer-attack3-05.png"))
         }, 6, false);
 
         _dashAnimation = new Animation(new List<Image>
         {
+          Image.FromFile(EternalPath.Path.Character.Get("adventurer-slide-00.png")),
+          Image.FromFile(EternalPath.Path.Character.Get("adventurer-slide-01.png")),
         }, 6, false);
       }
       catch (FileNotFoundException ex)
       {
         MessageBox.Show($"Sprite file not found: {ex.Message}", "Error");
-        // Fallback: Initialize with empty animations to prevent crashes
         _idleAnimation = new Animation(new List<Image>(), 10);
         _runAnimation = new Animation(new List<Image>(), 8);
         _jumpAnimation = new Animation(new List<Image>(), 12, false);
@@ -115,9 +119,7 @@ namespace EternalPath
       {
         _invulnerabilityTimer--;
         if (_invulnerabilityTimer <= 0)
-        {
           IsInvulnerable = false;
-        }
       }
 
       if (IsAttacking)
@@ -153,13 +155,9 @@ namespace EternalPath
           VelocityX += MOVE_SPEED;
 
         if (VelocityX != 0 && !IsAttacking)
-        {
           _currentAnimation = _runAnimation;
-        }
         else if (OnGround && !IsAttacking)
-        {
           _currentAnimation = _idleAnimation;
-        }
       }
 
       if (DashCooldown > 0)
