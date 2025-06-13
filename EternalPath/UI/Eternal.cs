@@ -1,252 +1,200 @@
-using EternalPath.InputHandlers;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Linq;
 using System.Windows.Forms;
 using Timer = System.Windows.Forms.Timer;
 
 namespace EternalPath
 {
-    public partial class Eternal : Form
+    public partial class MainMenuForm : Form
     {
-        private System.ComponentModel.IContainer components = null;
-        private Player player;
-        private Timer gameTimer;
-        private List<PictureBox> tiles;
-
-        private int scaledTileWidth = 500;
-        private int scaledTileHeight = 128;
-        private List<(Image image, Rectangle rect)> tileRects;
-
-        public Point PlayerLocation => player?.Location ?? Point.Empty;
-        public Size PlayerSize => player?.Size ?? Size.Empty;
-
-        protected override void Dispose(bool disposing)
+        public MainMenuForm()
         {
-            if (disposing)
-            {
-                components?.Dispose();
-                player?.Dispose();
-                gameTimer?.Dispose();
-
-                // Dispose semua tiles
-                if (tiles != null)
-                {
-                    foreach (var tile in tiles)
-                    {
-                        tile?.Dispose();
-                    }
-                    tiles.Clear();
-                }
-            }
-            base.Dispose(disposing);
+            InitializeComponent();
         }
 
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
-            this.AutoScaleMode = AutoScaleMode.Font;
-            this.ClientSize = new Size(Config.WindowWidth, Config.WindowHeight);
-            this.Text = "Eternal Path";
+            this.Text = "Endless Platformer - Main Menu";
+            this.Size = new Size(800, 600);
+            this.BackColor = Color.FromArgb(20, 30, 50);
+            this.StartPosition = FormStartPosition.CenterScreen;
+            this.FormBorderStyle = FormBorderStyle.FixedDialog;
+            this.MaximizeBox = false;
 
-            // Background
-            string imagePath = Path.Map.Get("background.png");
-            this.BackgroundImage = Image.FromFile(imagePath);
-            this.BackgroundImageLayout = ImageLayout.Stretch;
-
-            // Player
-            Size playerSize = new Size(256, 256);
-            Point playerLocation = new Point(0, 800);
-            player = new Player(playerLocation, playerSize);
-            string playerPath = Path.Characters.Get("Idle/Idle.gif");
-            player.SetImage(playerPath);
-
-            // Initialize tiles list
-            tiles = new List<PictureBox>();
-            CreateTiles();
-
-            // Timer
-            gameTimer = new Timer();
-            gameTimer.Interval = 30;
-            gameTimer.Tick += GameTimer_Tick;
-            gameTimer.Start();
-
-            // Events
-            this.KeyDown += Eternal_KeyDown;
-            this.KeyPress += Eternal_KeyPress;
-            this.KeyUp += Eternal_KeyUp;
-
-            this.KeyPreview = true;
-            this.DoubleBuffered = true;
-        }
-
-        private void CreateTiles()
-        {
-            string tilePath = Path.Map.Get("tileset-1.png");
-            Image tilesetImage = Image.FromFile(tilePath);
-
-            tileRects = new List<(Image, Rectangle)>();
-            tiles = new List<PictureBox>(); // Pastikan tiles diinisialisasi
-            int tilesNeeded = (int)Math.Ceiling((double)ClientSize.Width / scaledTileWidth) + 1;
-            int tileY = ClientSize.Height - scaledTileHeight;
-
-            for (int i = 0; i < tilesNeeded; i++)
+            Label titleLabel = new Label
             {
-                Rectangle rect = new Rectangle(i * scaledTileWidth, tileY, scaledTileWidth, scaledTileHeight);
-                tileRects.Add((tilesetImage, rect));
+                Text = "ENDLESS PLATFORMER",
+                Font = new Font("Arial", 24, FontStyle.Bold),
+                ForeColor = Color.White,
+                AutoSize = true
+            };
+            titleLabel.Location = new Point((this.Width - titleLabel.PreferredWidth) / 2, 100);
+            this.Controls.Add(titleLabel);
 
-                PictureBox tile = new PictureBox
-                {
-                    Image = tilesetImage,
-                    Size = new Size(scaledTileWidth, scaledTileHeight),
-                    Location = new Point(i * scaledTileWidth, tileY),
-                    SizeMode = PictureBoxSizeMode.StretchImage,
-                    BackColor = Color.Transparent
-                };
+            Button startButton = new Button
+            {
+                Text = "START GAME",
+                Font = new Font("Arial", 16, FontStyle.Bold),
+                Size = new Size(200, 50),
+                BackColor = Color.FromArgb(50, 150, 50),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat
+            };
+            startButton.Location = new Point((this.Width - startButton.Width) / 2, 200);
+            startButton.Click += StartButton_Click;
+            this.Controls.Add(startButton);
 
-                this.Controls.Add(tile);
-                tiles.Add(tile);
-                tile.SendToBack();
-            }
+            Label instructionsLabel = new Label
+            {
+                Text = "Controls:\nArrow Keys / WASD - Move\nSpace / Up - Jump (Double Jump)\nLeft Click - Attack\nRight Click - Dash\n\nCollect coins and defeat enemies!\nAvoid falling or losing all health!",
+                Font = new Font("Arial", 12),
+                ForeColor = Color.LightGray,
+                AutoSize = true,
+                TextAlign = ContentAlignment.MiddleCenter
+            };
+            instructionsLabel.Location = new Point((this.Width - instructionsLabel.PreferredWidth) / 2, 300);
+            this.Controls.Add(instructionsLabel);
+
+            Button exitButton = new Button
+            {
+                Text = "EXIT",
+                Font = new Font("Arial", 12, FontStyle.Bold),
+                Size = new Size(100, 30),
+                BackColor = Color.FromArgb(150, 50, 50),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat
+            };
+            exitButton.Location = new Point((this.Width - exitButton.Width) / 2, 500);
+            exitButton.Click += ExitButton_Click;
+            this.Controls.Add(exitButton);
+
+            this.Paint += MainMenuForm_Paint;
         }
 
-        public Eternal()
+        private void MainMenuForm_Paint(object sender, PaintEventArgs e)
+        {
+            LinearGradientBrush brush = new LinearGradientBrush(
+                new Rectangle(0, 0, this.Width, this.Height),
+                Color.FromArgb(20, 30, 50),
+                Color.FromArgb(40, 60, 90),
+                LinearGradientMode.Vertical);
+            e.Graphics.FillRectangle(brush, 0, 0, this.Width, this.Height);
+        }
+
+        private void StartButton_Click(object sender, EventArgs e)
+        {
+            this.Hide();
+            var gameForm = new GameForm();
+            gameForm.ShowDialog();
+            this.Show();
+        }
+
+        private void ExitButton_Click(object sender, EventArgs e)
+        {
+            Application.Exit();
+        }
+    }
+
+    public partial class GameForm : Form
+    {
+        private Timer _gameTimer;
+        private GameManager _gameManager;
+        private Renderer _renderer;
+        private bool[] _keysPressed = new bool[256];
+        private Point _mousePosition;
+
+        public GameForm()
         {
             InitializeComponent();
-            KeyHandler.UpdatePhysics();
-            Invalidate();
-            KeyHandler.PlayerLocation = player.Location;
-            KeyHandler.PlayerSize = player.Size;
-            KeyHandler.Form = this;
         }
 
-        public void SetPlayerImage(string imagePath)
+        private void InitializeComponent()
         {
-            player?.SetImage(imagePath);
-            Invalidate(player?.GetInvalidateRectangle() ?? Rectangle.Empty);
+            this.Text = "Endless Platformer";
+            this.Size = new Size(1200, 700);
+            this.BackColor = Color.SkyBlue;
+            this.DoubleBuffered = true;
+            this.KeyPreview = true;
+            this.FormBorderStyle = FormBorderStyle.FixedDialog;
+            this.MaximizeBox = false;
+            this.StartPosition = FormStartPosition.CenterScreen;
+
+            this.KeyDown += GameForm_KeyDown;
+            this.KeyUp += GameForm_KeyUp;
+            this.Paint += GameForm_Paint;
+            this.FormClosed += GameForm_FormClosed;
+            this.MouseDown += GameForm_MouseDown;
+            this.MouseMove += GameForm_MouseMove;
+
+            _gameManager = new GameManager(this.Height);
+            _renderer = new Renderer();
+            InitializeGameTimer();
         }
 
-        private bool CheckCollisionWithTiles(Rectangle playerHitbox)
+        private void InitializeGameTimer()
         {
-            foreach (var tile in tiles)
-            {
-                if (tile.Bounds.IntersectsWith(playerHitbox))
-                {
-                    return true;
-                }
-            }
-            return false;
+            _gameTimer = new Timer();
+            _gameTimer.Interval = 16; // ~60 FPS
+            _gameTimer.Tick += GameTimer_Tick;
+            _gameTimer.Start();
         }
-
-        private Point GetValidPlayerPosition(Point nextLocation)
-        {
-            Rectangle playerBounds = player.GetHitboxAt(nextLocation);
-
-            if (CheckCollisionWithTiles(playerBounds))
-            {
-                Point validPosition = nextLocation;
-
-                for (int y = nextLocation.Y; y >= 0; y--)
-                {
-                    Rectangle testBounds = player.GetHitboxAt(new Point(nextLocation.X, y));
-
-                    if (!CheckCollisionWithTiles(testBounds))
-                    {
-                        validPosition.Y = y;
-                        break;
-                    }
-                }
-
-                if (validPosition.Y + player.Size.Height > ClientSize.Height)
-                {
-                    validPosition.Y = ClientSize.Height - player.Size.Height;
-                }
-
-                return validPosition;
-            }
-
-            return nextLocation;
-        }
-
 
         private void GameTimer_Tick(object sender, EventArgs e)
         {
-            if (player != null)
+            _gameManager.Update(_keysPressed, _mousePosition);
+            Invalidate();
+        }
+
+        private void GameForm_Paint(object sender, PaintEventArgs e)
+        {
+            _renderer.Render(e.Graphics, _gameManager, this.Width, this.Height);
+        }
+
+        private void GameForm_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left && !_gameManager.GameOver)
             {
-                var nextLocation = KeyHandler.PlayerLocation;
-
-                var validLocation = GetValidPlayerPosition(nextLocation);
-
-                KeyHandler.PlayerLocation = validLocation;
-
-                player.Location = validLocation;
-                player.FacingLeft = KeyHandler.FacingLeft;
-                player.Update();
-
-                Invalidate();
+                _gameManager.Player.StartAttack();
+            }
+            else if (e.Button == MouseButtons.Right && !_gameManager.GameOver)
+            {
+                _gameManager.Player.StartDash(_keysPressed);
             }
         }
 
-        protected override void OnPaint(PaintEventArgs e)
+        private void GameForm_KeyDown(object sender, KeyEventArgs e)
         {
-            base.OnPaint(e);
+            _keysPressed[(int)e.KeyCode] = true;
 
-            if (tileRects != null)
+            if (_gameManager.GameOver)
             {
-                foreach (var tile in tileRects)
+                if (e.KeyCode == Keys.R)
                 {
-                    e.Graphics.DrawImage(tile.image, tile.rect);
+                    _gameManager.Restart();
+                }
+                else if (e.KeyCode == Keys.Escape)
+                {
+                    this.Close();
                 }
             }
-
-            player?.Draw(e.Graphics);
         }
 
-
-        private void Eternal_KeyDown(object sender, KeyEventArgs e)
+        private void GameForm_KeyUp(object sender, KeyEventArgs e)
         {
-            KeyHandler.HandleKeyDown(e);
+            _keysPressed[(int)e.KeyCode] = false;
         }
 
-        private void Eternal_KeyPress(object sender, KeyPressEventArgs e)
+        private void GameForm_MouseMove(object sender, MouseEventArgs e)
         {
-            KeyHandler.HandleKeyPress(e);
+            _mousePosition = e.Location;
         }
 
-        private void Eternal_KeyUp(object sender, KeyEventArgs e)
+        private void GameForm_FormClosed(object sender, FormClosedEventArgs e)
         {
-            KeyHandler.HandleKeyUp(e);
-        }
-
-        public void AddTile(Point location)
-        {
-            string tilePath = Path.Map.Get("tileset-1.png");
-            Image tilesetImage = Image.FromFile(tilePath);
-
-            PictureBox newTile = new PictureBox();
-            newTile.Image = tilesetImage;
-            newTile.Size = new Size(scaledTileWidth, scaledTileHeight);
-            newTile.Location = location;
-            newTile.SizeMode = PictureBoxSizeMode.StretchImage;
-            newTile.BackColor = Color.Transparent;
-
-            this.Controls.Add(newTile);
-            tiles.Add(newTile);
-            newTile.SendToBack();
-        }
-
-        public void RemoveOffscreenTiles()
-        {
-            for (int i = tiles.Count - 1; i >= 0; i--)
-            {
-                var tile = tiles[i];
-                if (tile.Right < 0 || tile.Left > ClientSize.Width)
-                {
-                    this.Controls.Remove(tile);
-                    tile.Dispose();
-                    tiles.RemoveAt(i);
-                }
-            }
+            _gameTimer?.Stop();
         }
     }
 }
