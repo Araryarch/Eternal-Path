@@ -51,11 +51,62 @@ namespace EternalPath
 
     private void InitializeAnimations()
     {
-      _idleAnimation = new Animation(new List<Image> { /* Add sprite paths */ }, 10);
-      _runAnimation = new Animation(new List<Image> { /* Add sprite paths */ }, 8);
-      _jumpAnimation = new Animation(new List<Image> { /* Add sprite paths */ }, 12, false);
-      _attackAnimation = new Animation(new List<Image> { /* Add sprite paths */ }, 6, false);
-      _dashAnimation = new Animation(new List<Image> { /* Add sprite paths */ }, 6, false);
+      try
+      {
+        _idleAnimation = new Animation(new List<Image>
+        {
+            Image.FromFile(EternalPath.Path.Character.Get("adventurer-idle-00.png")),
+            Image.FromFile(EternalPath.Path.Character.Get("adventurer-idle-01.png")),
+            Image.FromFile(EternalPath.Path.Character.Get("adventurer-idle-02.png")),
+            Image.FromFile(EternalPath.Path.Character.Get("adventurer-idle-03.png"))
+        }, 10);
+
+        _runAnimation = new Animation(new List<Image>
+        {
+            Image.FromFile(EternalPath.Path.Character.Get("adventurer-run-00.png")),
+            Image.FromFile(EternalPath.Path.Character.Get("adventurer-run-01.png")),
+            Image.FromFile(EternalPath.Path.Character.Get("adventurer-run-02.png")),
+            Image.FromFile(EternalPath.Path.Character.Get("adventurer-run-03.png")),
+            Image.FromFile(EternalPath.Path.Character.Get("adventurer-run-04.png")),
+            Image.FromFile(EternalPath.Path.Character.Get("adventurer-run-05.png"))
+        }, 8);
+
+        _jumpAnimation = new Animation(new List<Image>
+        {
+            Image.FromFile(EternalPath.Path.Character.Get("adventurer-jump-00.png")),
+            Image.FromFile(EternalPath.Path.Character.Get("adventurer-jump-01.png")),
+            Image.FromFile(EternalPath.Path.Character.Get("adventurer-jump-02.png")),
+            Image.FromFile(EternalPath.Path.Character.Get("adventurer-jump-03.png"))
+        }, 12, false);
+
+        _attackAnimation = new Animation(new List<Image>
+        {
+            Image.FromFile(EternalPath.Path.Character.Get("adventurer-attack3-00.png")),
+            Image.FromFile(EternalPath.Path.Character.Get("adventurer-attack3-01.png")),
+            Image.FromFile(EternalPath.Path.Character.Get("adventurer-attack3-02.png")),
+            Image.FromFile(EternalPath.Path.Character.Get("adventurer-attack3-03.png")),
+            Image.FromFile(EternalPath.Path.Character.Get("adventurer-attack3-04.png")),
+            Image.FromFile(EternalPath.Path.Character.Get("adventurer-attack3-05.png"))
+        }, 6, false);
+
+        _dashAnimation = new Animation(new List<Image>
+        {
+        }, 6, false);
+      }
+      catch (FileNotFoundException ex)
+      {
+        MessageBox.Show($"Sprite file not found: {ex.Message}", "Error");
+        // Fallback: Initialize with empty animations to prevent crashes
+        _idleAnimation = new Animation(new List<Image>(), 10);
+        _runAnimation = new Animation(new List<Image>(), 8);
+        _jumpAnimation = new Animation(new List<Image>(), 12, false);
+        _attackAnimation = new Animation(new List<Image>(), 6, false);
+        _dashAnimation = new Animation(new List<Image>(), 6, false);
+      }
+      catch (Exception ex)
+      {
+        MessageBox.Show($"Error loading animations: {ex.Message}", "Error");
+      }
     }
 
     public void Update(bool[] keys, List<Platform> platforms, List<Enemy> enemies, int screenHeight, Point mousePosition)

@@ -34,6 +34,13 @@ namespace EternalPath
         return System.IO.Path.Combine(RootRelative, "Assets", "Sprites", relativePath);
       }
     }
+    public static class Character
+    {
+      public static string Get(string relativePath)
+      {
+        return System.IO.Path.Combine(RootRelative, "Assets", "Sprites", "Adventurer", "ListSprites", relativePath);
+      }
+    }
     public static class Icon
     {
       public static string Get(string relativePath)
