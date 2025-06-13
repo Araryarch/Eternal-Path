@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
+using System.Media;
 using System.Windows.Forms;
 using Timer = System.Windows.Forms.Timer;
 
@@ -10,9 +11,13 @@ namespace EternalPath
 {
     public partial class MainMenuForm : Form
     {
+        private SoundPlayer _sound;
         public MainMenuForm()
         {
             InitializeComponent();
+
+            _sound = new SoundPlayer(EternalPath.Path.Sound.Get("background.wav"));
+            _sound.PlayLooping();
         }
 
         private void InitializeComponent()
@@ -103,6 +108,7 @@ namespace EternalPath
     {
         private Timer _gameTimer;
         private GameManager _gameManager;
+        private SoundPlayer _sound;
         private Renderer _renderer;
         private bool[] _keysPressed = new bool[256];
         private Point _mousePosition;
@@ -110,6 +116,9 @@ namespace EternalPath
         public GameForm()
         {
             InitializeComponent();
+
+            _sound = new SoundPlayer(EternalPath.Path.Sound.Get("background.wav"));
+            _sound.PlayLooping();
         }
 
         private void InitializeComponent()
