@@ -53,10 +53,10 @@
 
 ## 📸 Cuplikan Layar
 
-> _(Tambahkan gambar ke folder `assets/` dan tampilkan di bawah ini)_
+> Gameplay Singkat
 
 ```md
-![Gameplay](./assets/screenshot.png)
+![Gameplay](./gameplay.png)
 ```
 
 ---
