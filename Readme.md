@@ -55,9 +55,7 @@
 
 > Gameplay Singkat
 
-```md
 ![Gameplay](./gameplay.png)
-```
 
 ---
 
